@@ -3,6 +3,9 @@ import AVFoundation
 
 enum AudioPreprocessor {
     static let openAILimit = 25 * 1024 * 1024
+    static let openAISupportedExtensions: Set<String> = [
+        "mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "flac", "ogg", "oga"
+    ]
 
     struct Prepared {
         let url: URL
@@ -28,7 +31,9 @@ enum AudioPreprocessor {
 
     static func prepareIfNeeded(url: URL) async throws -> Prepared {
         let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
-        if size <= openAILimit {
+        let extLower = url.pathExtension.lowercased()
+        let extensionSupported = openAISupportedExtensions.contains(extLower)
+        if size <= openAILimit && extensionSupported {
             return Prepared(url: url, tempURL: nil)
         }
 
