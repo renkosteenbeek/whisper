@@ -1,0 +1,115 @@
+name: WhisperMac
+options:
+  bundleIdPrefix: nl.gentle-innovations
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "18.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  schemePathPrefix: ""
+  generateEmptyDirectories: true
+
+schemes:
+  WhisperMac:
+    build:
+      targets:
+        WhisperMac: all
+    run:
+      config: Debug
+  WhisperMobile:
+    build:
+      targets:
+        WhisperMobile: all
+        WhisperShare: all
+    run:
+      config: Debug
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  WhisperMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: WhisperMac
+      - path: Shared
+      - path: openai-key.txt
+        optional: true
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: nl.gentle-innovations.whispermac
+        PRODUCT_NAME: WhisperMac
+        INFOPLIST_FILE: WhisperMac/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WhisperMac/WhisperMac.entitlements
+        ENABLE_APP_SANDBOX: YES
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+  WhisperMobile:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: WhisperMac/Models
+      - path: WhisperMac/Services
+        excludes:
+          - "ExportService.swift"
+      - path: Shared
+      - path: WhisperMobile
+      - path: openai-key.txt
+        optional: true
+        buildPhase: resources
+    dependencies:
+      - target: WhisperShare
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: nl.gentle-innovations.whispermac.mobile
+        PRODUCT_NAME: WhisperMac
+        INFOPLIST_FILE: WhisperMobile/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WhisperMobile/WhisperMobile.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+        SWIFT_EMIT_LOC_STRINGS: YES
+
+  WhisperShare:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: WhisperMac/Models
+      - path: WhisperMac/Services
+        excludes:
+          - "ExportService.swift"
+      - path: Shared
+      - path: WhisperShare
+      - path: openai-key.txt
+        optional: true
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: nl.gentle-innovations.whispermac.mobile.share
+        PRODUCT_NAME: WhisperShare
+        INFOPLIST_FILE: WhisperShare/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WhisperShare/WhisperShare.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+        SKIP_INSTALL: YES

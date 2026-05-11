@@ -1,0 +1,16 @@
+## Xcode generated
+build/
+DerivedData/
+*.xcodeproj
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata
+.swiftpm/
+
+## macOS
+.DS_Store
+
+## XcodeGen leaves no garbage but keep regen workflow clean
+
+## Local secrets - never commit
+openai-key.txt
