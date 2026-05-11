@@ -10,29 +10,12 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("WhisperMac")
-                    .font(.title2.weight(.semibold))
-                Spacer()
-                Button {
-                    showingSettings = true
-                } label: {
-                    Image(systemName: "gearshape")
-                }
-                .buttonStyle(.plain)
-                .help("Settings")
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-
-            Divider()
-
             DropZoneView()
                 .padding()
 
             Divider()
 
-            if activeJobs.isEmpty && store.transcripts.isEmpty {
+            if queue.jobs.isEmpty && store.transcripts.isEmpty {
                 ContentUnavailableView(
                     "No transcriptions yet",
                     systemImage: "waveform",
@@ -41,10 +24,17 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    if !activeJobs.isEmpty {
-                        Section("Processing") {
-                            ForEach(activeJobs) { job in
+                    if !queue.jobs.isEmpty {
+                        Section(processingSectionTitle) {
+                            ForEach(queue.jobs) { job in
                                 ProcessingJobRow(job: job)
+                                    .swipeActions(edge: .trailing) {
+                                        Button(role: .destructive) {
+                                            queue.jobs.removeAll { $0.id == job.id }
+                                        } label: {
+                                            Label("Dismiss", systemImage: "xmark")
+                                        }
+                                    }
                             }
                         }
                     }
@@ -77,6 +67,16 @@ struct ContentView: View {
                 .listStyle(.inset)
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .help("Settings")
+            }
+        }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
                 .frame(minWidth: 520, minHeight: 380)
@@ -103,7 +103,8 @@ struct ContentView: View {
         }
     }
 
-    private var activeJobs: [TranscriptionJob] {
-        queue.jobs.filter { !$0.isDone }
+    private var processingSectionTitle: String {
+        let allDone = queue.jobs.allSatisfy { if case .done = $0.status { return true } else { return false } }
+        return allDone ? "Recent" : "Processing"
     }
 }

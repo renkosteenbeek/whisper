@@ -80,11 +80,8 @@ struct ProcessingJobRow: View {
     var body: some View {
         HStack(spacing: 14) {
             ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.18))
-                ProgressView()
-                    .controlSize(.small)
-                    .tint(.accentColor)
+                Circle().fill(iconTint.opacity(0.18))
+                iconView
             }
             .frame(width: 38, height: 38)
 
@@ -105,11 +102,36 @@ struct ProcessingJobRow: View {
                     Text(msg)
                         .font(.caption)
                         .foregroundStyle(.red)
-                        .lineLimit(2)
+                        .lineLimit(3)
+                        .textSelection(.enabled)
                 }
             }
             Spacer()
         }
         .padding(.vertical, 6)
+    }
+
+    private var iconTint: Color {
+        switch job.status {
+        case .failed: return .red
+        case .done: return .green
+        default: return .accentColor
+        }
+    }
+
+    @ViewBuilder
+    private var iconView: some View {
+        switch job.status {
+        case .failed:
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.red)
+        case .done:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.green)
+        default:
+            ProgressView().controlSize(.small).tint(.accentColor)
+        }
     }
 }

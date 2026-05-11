@@ -88,12 +88,19 @@ final class JobQueue {
             job.status = .done(result)
 
             if let store {
-                try? store.save(
-                    result: result,
-                    filename: job.displayName,
-                    model: job.model,
-                    audioRelativePath: job.audioRelativePath
-                )
+                do {
+                    try store.save(
+                        result: result,
+                        filename: job.displayName,
+                        model: job.model,
+                        audioRelativePath: job.audioRelativePath
+                    )
+                    if let idx = jobs.firstIndex(where: { $0.id == job.id }) {
+                        jobs.remove(at: idx)
+                    }
+                } catch {
+                    NSLog("JobQueue: store.save failed: \(error.localizedDescription)")
+                }
             }
         } catch {
             job.status = .failed(error.localizedDescription)

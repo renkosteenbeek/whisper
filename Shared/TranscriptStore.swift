@@ -41,9 +41,7 @@ final class TranscriptStore {
 
     init() {
         let fm = FileManager.default
-        let base = fm.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup)
-            ?? fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("WhisperMac", isDirectory: true)
+        let base = Self.resolveContainerURL()
 
         self.containerURL = base
         self.transcriptsDir = base.appendingPathComponent("transcripts", isDirectory: true)
@@ -51,10 +49,25 @@ final class TranscriptStore {
         self.mediaDir = base.appendingPathComponent("media", isDirectory: true)
 
         for dir in [transcriptsDir, pendingDir, mediaDir] {
-            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            do {
+                try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            } catch {
+                NSLog("TranscriptStore: createDirectory failed for \(dir.path): \(error.localizedDescription)")
+            }
         }
 
         reload()
+    }
+
+    private static func resolveContainerURL() -> URL {
+        let fm = FileManager.default
+        if let group = fm.containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
+            return group
+        }
+        let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("WhisperMac", isDirectory: true)
+        try? fm.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        return appSupport
     }
 
     var sharedContainerURL: URL { containerURL }
@@ -77,6 +90,7 @@ final class TranscriptStore {
     }
 
     func save(result: TranscriptionResult, filename: String, model: WhisperModel, audioRelativePath: String?) throws {
+        NSLog("TranscriptStore: save() called for \(filename), writing to \(transcriptsDir.path)")
         let t = SavedTranscript(
             id: UUID(),
             filename: filename,
