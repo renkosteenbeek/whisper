@@ -76,6 +76,7 @@ struct LibraryRow: View {
 
 struct ProcessingJobRow: View {
     @Bindable var job: TranscriptionJob
+    let onView: () -> Void
 
     var body: some View {
         HStack(spacing: 14) {
@@ -107,6 +108,11 @@ struct ProcessingJobRow: View {
                 }
             }
             Spacer()
+            if job.isDone {
+                Button("View", action: onView)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+            }
         }
         .padding(.vertical, 6)
     }

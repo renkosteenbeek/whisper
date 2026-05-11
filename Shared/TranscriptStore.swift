@@ -90,7 +90,6 @@ final class TranscriptStore {
     }
 
     func save(result: TranscriptionResult, filename: String, model: WhisperModel, audioRelativePath: String?) throws {
-        NSLog("TranscriptStore: save() called for \(filename), writing to \(transcriptsDir.path)")
         let t = SavedTranscript(
             id: UUID(),
             filename: filename,

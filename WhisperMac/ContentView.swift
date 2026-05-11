@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(AppSettings.self) private var settings
     @Environment(JobQueue.self) private var queue
     @Environment(TranscriptStore.self) private var store
     @State private var showingSettings = false
     @State private var detailTranscript: SavedTranscript?
     @State private var pendingDelete: SavedTranscript?
+    @State private var inFlightResult: InFlightResult?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,39 +27,44 @@ struct ContentView: View {
                     if !queue.jobs.isEmpty {
                         Section(processingSectionTitle) {
                             ForEach(queue.jobs) { job in
-                                ProcessingJobRow(job: job)
-                                    .swipeActions(edge: .trailing) {
-                                        Button(role: .destructive) {
-                                            queue.jobs.removeAll { $0.id == job.id }
-                                        } label: {
-                                            Label("Dismiss", systemImage: "xmark")
-                                        }
+                                ProcessingJobRow(job: job) {
+                                    inFlightResult = InFlightResult(job: job)
+                                }
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) {
+                                        queue.jobs.removeAll { $0.id == job.id }
+                                    } label: {
+                                        Label("Dismiss", systemImage: "xmark")
                                     }
+                                }
                             }
                         }
                     }
                     if !store.transcripts.isEmpty {
                         Section("Transcripts") {
                             ForEach(store.transcripts) { transcript in
-                                LibraryRow(transcript: transcript)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture { detailTranscript = transcript }
-                                    .contextMenu {
-                                        Button("Open") { detailTranscript = transcript }
-                                        Divider()
-                                        Button(role: .destructive) {
-                                            pendingDelete = transcript
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
+                                Button {
+                                    detailTranscript = transcript
+                                } label: {
+                                    LibraryRow(transcript: transcript)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button("Open") { detailTranscript = transcript }
+                                    Divider()
+                                    Button(role: .destructive) {
+                                        pendingDelete = transcript
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                        Button(role: .destructive) {
-                                            pendingDelete = transcript
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        pendingDelete = transcript
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
+                                }
                             }
                         }
                     }
@@ -83,6 +88,10 @@ struct ContentView: View {
         }
         .sheet(item: $detailTranscript) { transcript in
             TranscriptWindow(transcript: transcript)
+                .frame(minWidth: 640, minHeight: 480)
+        }
+        .sheet(item: $inFlightResult) { item in
+            TranscriptWindow(transcript: item.asTranscript)
                 .frame(minWidth: 640, minHeight: 480)
         }
         .confirmationDialog(
